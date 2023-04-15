@@ -17,71 +17,78 @@ LR_FFT = 5e-2
 LR_GRID = 2.5e-4
 LR_COMPLEX = 5e-3
 
+
 def train_complex(f=F_COMPLEX_TRAIN, n_h=[256, 256]):
     train_params = {}
-    train_params['n_epochs'] = 5
-    train_params['log_interval'] = 100
-    train_params['batch_size'] = 100
+    train_params["n_epochs"] = 5
+    train_params["log_interval"] = 100
+    train_params["batch_size"] = 100
 
     optim_params = {}
-    optim_params['lr'] = 5e-3
-    optim_params['momentum'] = .9
+    optim_params["lr"] = 5e-3
+    optim_params["momentum"] = 0.9
 
     net = mnist_complex(hidden_units=n_h)
     print(net)
     train(net, **train_params, optim_params=optim_params)
-    optim_params['lr'] /= 5
+    optim_params["lr"] /= 5
     train(net, **train_params, optim_params=optim_params)
     acc = get_acc(net)
-    print(f'Trained ComplexNet with accuracy {acc}.')
+    print(f"Trained ComplexNet with accuracy {acc}.")
     if f:
         th.save(net.state_dict(), f)
-        print(f'Saved model to {f}.')
+        print(f"Saved model to {f}.")
+
+
 def train_cgrd(f=F_CGRD_TRAIN):
     train_params = {}
-    train_params['n_epochs'] = 5
-    train_params['log_interval'] = 100
-    train_params['batch_size'] = 100
+    train_params["n_epochs"] = 5
+    train_params["log_interval"] = 100
+    train_params["batch_size"] = 100
 
     optim_params = {}
-    optim_params['lr'] = LR_GRID
-    optim_params['momentum'] = .9
+    optim_params["lr"] = LR_GRID
+    optim_params["momentum"] = 0.9
 
     net = mnist_ONN(unitary=CGRDUnitary)
     if f:
         th.save(net.state_dict(), f)
-        print(f'Saved model to {f}.')
+        print(f"Saved model to {f}.")
     if f:
         th.save(net.state_dict(), f)
-        print(f'Saved model to {f}.')
+        print(f"Saved model to {f}.")
     train(net, **train_params, optim_params=optim_params)
-    optim_params['lr'] /= 5
+    optim_params["lr"] /= 5
     train(net, **train_params, optim_params=optim_params)
     acc = get_acc(net)
-    print(f'Trained ComplexNet with accuracy {acc}.')
+    print(f"Trained ComplexNet with accuracy {acc}.")
     if f:
         th.save(net.state_dict(), f)
-        print(f'Saved model to {f}.')
+        print(f"Saved model to {f}.")
+
+
 def train_fft(f=F_FFT_TRAIN, n_h=[256, 256]):
     train_params = {}
-    train_params['n_epochs'] = 5
-    train_params['log_interval'] = 100
-    train_params['batch_size'] = 100
+    train_params["n_epochs"] = 5
+    train_params["log_interval"] = 100
+    train_params["batch_size"] = 100
 
     optim_params = {}
-    optim_params['lr'] = LR_FFT * 3
-    optim_params['momentum'] = .9
+    optim_params["lr"] = LR_FFT * 3
+    optim_params["momentum"] = 0.9
 
     net = mnist_ONN(FFTUnitary, hidden_units=n_h)
     print(net)
     train(net, **train_params, optim_params=optim_params)
-    optim_params['lr'] /= 5
+    optim_params["lr"] /= 5
     train(net, **train_params, optim_params=optim_params)
     acc = get_acc(net)
-    print(f'Trained FFTNet with accuracy {acc}.')
+    print(f"Trained FFTNet with accuracy {acc}.")
     if f:
         th.save(net, f)
-        print(f'Saved model to {f}.')
+        print(f"Saved model to {f}.")
+
+
 def convert_save_grid_net(complex_net=None, f=None, rand_S=True):
     if complex_net is None:
         complex_net = load_complex()
@@ -89,23 +96,33 @@ def convert_save_grid_net(complex_net=None, f=None, rand_S=True):
         f = F_GRID_TRAIN if rand_S else F_GRID_ORD_TRAIN
     grid_net = complex_net.to_grid_net(rand_S=rand_S).to(DEVICE)
     acc = get_acc(grid_net)
-    print(f'Converted to GridNet with accuracy {acc} with {"shuffled" if rand_S else "ordered"} singular values.')
+    print(
+        f'Converted to GridNet with accuracy {acc} with {"shuffled" if rand_S else "ordered"} singular values.'
+    )
     th.save(grid_net.state_dict(), f)
-    print(f'Saved GridNet at {f}')
-def batch_train_complex(n_train, dir = DIR_COMPLEX_TRAIN):
+    print(f"Saved GridNet at {f}")
+
+
+def batch_train_complex(n_train, dir=DIR_COMPLEX_TRAIN):
     for _ in range(n_train):
-        f = os.path.join(dir, f'{time():.0f}')
+        f = os.path.join(dir, f"{time():.0f}")
         train_complex(f=f)
-def batch_convert(dir = DIR_COMPLEX_TRAIN):
-    for f in glob(os.path.join(dir, '*')):
+
+
+def batch_convert(dir=DIR_COMPLEX_TRAIN):
+    for f in glob(os.path.join(dir, "*")):
         net = load_complex(f)
-        convert_save_grid_net(net, f=f+'_grid')
+        convert_save_grid_net(net, f=f + "_grid")
+
+
 def load_complex(f=F_COMPLEX_TRAIN):
     net = mnist_complex()
     net.load_state_dict(th.load(f, map_location=DEVICE))
     acc = get_acc(net)
-    print(f'ComplexNet loaded from {f} with accuracy {acc}.')
+    print(f"ComplexNet loaded from {f} with accuracy {acc}.")
     return net.to(DEVICE)
+
+
 def load_grid(f=None, rand_S=True, report_acc=True):
     if f is None:
         f = F_GRID_TRAIN if rand_S else F_GRID_ORD_TRAIN
@@ -113,21 +130,23 @@ def load_grid(f=None, rand_S=True, report_acc=True):
     net.load_state_dict(th.load(f, map_location=DEVICE))
     if report_acc:
         acc = get_acc(net)
-        print(f'GridNet loaded from {f} with accuracy {acc}.')
+        print(f"GridNet loaded from {f} with accuracy {acc}.")
     else:
-        print(f'GridNet loaded from {f}.')
+        print(f"GridNet loaded from {f}.")
     return net.to(DEVICE)
+
+
 def load_fft(f=F_FFT_TRAIN):
     net = mnist_ONN(FFTUnitary)
     net.load_state_dict(th.load(f, map_location=DEVICE))
     acc = get_acc(net)
-    print(f'FFTNet loaded from {f} with accuracy {acc}.')
+    print(f"FFTNet loaded from {f} with accuracy {acc}.")
     return net.to(DEVICE)
 
-if __name__ == '__main__':
 
+if __name__ == "__main__":
     net = load_fft()
-    
+
     for data, target in mnist_loader(train=False, batch_size=100, shuffle=False):
         continue
     data = data.view(-1, 28**2)
